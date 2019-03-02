@@ -1,0 +1,5 @@
+package com.course.ms.flightSchedule.dao;
+
+public interface FlightScheduleRepository {
+
+}
