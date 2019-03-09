@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import com.course.ms.flightFare.dao.FlightFareRepository;
+import com.course.ms.flightFare.feginClients.CurrencyConversionServiceProxy;
 import com.course.ms.flightFare.models.CurrencyConversionVO;
 import com.course.ms.flightFare.models.FlightFare;
 import com.netflix.appinfo.InstanceInfo;
@@ -40,6 +41,13 @@ public class FLightFareController {
 	
 	@Autowired
 	private RestTemplate restTemplate;
+	
+	@Value("${use.feign.client:false}")
+	private boolean useFeignClient;
+
+	@Autowired
+	private CurrencyConversionServiceProxy feignProxy;
+
 	
 	@Value("${base.currency:USD}")
 	private String baseCurrency;
@@ -90,6 +98,9 @@ public class FLightFareController {
 					"http://currency-conversion/api/v1/from/{from}/to/{to}", CurrencyConversionVO.class,
 					urlPathVariables);
 			CurrencyConversionVO converter = responseEntity.getBody();
+			return converter.getConversionRate();
+		} else if(useFeignClient) {
+			CurrencyConversionVO converter = feignProxy.convertCurrency(baseCurrency, toCurrency);
 			return converter.getConversionRate();
 		} else {
 			RestTemplate restTemplate = new RestTemplate();
