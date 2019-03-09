@@ -1,5 +1,0 @@
-package com.course.ms.flightSchedule.services;
-
-public interface FlightScheduleServiceImpl {
-
-}
