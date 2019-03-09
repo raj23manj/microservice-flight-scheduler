@@ -2,6 +2,7 @@ package com.course.ms.flightFare.controllers;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,9 @@ import org.springframework.web.client.RestTemplate;
 import com.course.ms.flightFare.dao.FlightFareRepository;
 import com.course.ms.flightFare.models.CurrencyConversionVO;
 import com.course.ms.flightFare.models.FlightFare;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
 
 @RestController
 @RequestMapping(value="/api/v1/flight/{flightCode}/fare/{currency}")
@@ -24,6 +28,12 @@ public class FLightFareController {
 
 	@Autowired
 	private FlightFareRepository flightFareRepository;
+	
+	@Autowired
+	private EurekaClient eurekaClient;
+	
+	@Value("${use.eureka.client:false}")
+	private boolean useEurekaClient;
 	
 	@Value("${base.currency:USD}")
 	private String baseCurrency;
@@ -51,17 +61,34 @@ public class FLightFareController {
 	}
 	
 	private BigDecimal getConversion(String toCurrency) {
-		RestTemplate restTemplate = new RestTemplate();
-		
-		Map<String, String> urlPathVariables = new HashMap<>();
-		urlPathVariables.put("from", baseCurrency);
-		urlPathVariables.put("to", toCurrency);
-		
-		ResponseEntity<CurrencyConversionVO> responseEntity = restTemplate.getForEntity("http://localhost:7101/api/v1/from/{from}/to/{to}", 
-							      CurrencyConversionVO.class,
-							      urlPathVariables
-							      );
-		CurrencyConversionVO converter = responseEntity.getBody();
-		return converter.getConversionRate();
+		if(useEurekaClient) {
+			Application app = eurekaClient.getApplication("currency-conversion");
+			List<InstanceInfo> instances = app.getInstances();
+
+			String serviceUri = String.format("%sapi/v1/from/{from}/to/{to}", instances.get(0).getHomePageUrl()); // http://localhost:7101/
+
+			RestTemplate restTemplate = new RestTemplate();
+			Map<String, String> urlPathVariables = new HashMap<>();
+			urlPathVariables.put("from", baseCurrency);
+			urlPathVariables.put("to", toCurrency);
+
+			ResponseEntity<CurrencyConversionVO> responseEntity = restTemplate.getForEntity(serviceUri,
+					CurrencyConversionVO.class, urlPathVariables);
+			CurrencyConversionVO converter = responseEntity.getBody();
+			return converter.getConversionRate();
+		} else {
+			RestTemplate restTemplate = new RestTemplate();
+			
+			Map<String, String> urlPathVariables = new HashMap<>();
+			urlPathVariables.put("from", baseCurrency);
+			urlPathVariables.put("to", toCurrency);
+			
+			ResponseEntity<CurrencyConversionVO> responseEntity = restTemplate.getForEntity("http://localhost:7101/api/v1/from/{from}/to/{to}", 
+								      CurrencyConversionVO.class,
+								      urlPathVariables
+								      );
+			CurrencyConversionVO converter = responseEntity.getBody();
+			return converter.getConversionRate();
+		} 
 	}
 }
