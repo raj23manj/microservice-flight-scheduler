@@ -35,6 +35,12 @@ public class FLightFareController {
 	@Value("${use.eureka.client:false}")
 	private boolean useEurekaClient;
 	
+	@Value("${use.ribbon.backed.rest.template:false}")
+	private boolean useRibbonBackedRestTemplate;
+	
+	@Autowired
+	private RestTemplate restTemplate;
+	
 	@Value("${base.currency:USD}")
 	private String baseCurrency;
 	
@@ -74,6 +80,15 @@ public class FLightFareController {
 
 			ResponseEntity<CurrencyConversionVO> responseEntity = restTemplate.getForEntity(serviceUri,
 					CurrencyConversionVO.class, urlPathVariables);
+			CurrencyConversionVO converter = responseEntity.getBody();
+			return converter.getConversionRate();
+		}else if (useRibbonBackedRestTemplate) {
+			Map<String, String> urlPathVariables = new HashMap<>();
+			urlPathVariables.put("from", baseCurrency);
+			urlPathVariables.put("to", toCurrency);
+			ResponseEntity<CurrencyConversionVO> responseEntity = restTemplate.getForEntity(
+					"http://currency-conversion/api/v1/from/{from}/to/{to}", CurrencyConversionVO.class,
+					urlPathVariables);
 			CurrencyConversionVO converter = responseEntity.getBody();
 			return converter.getConversionRate();
 		} else {
