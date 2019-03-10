@@ -27,11 +27,14 @@ public class RouteFilter extends ZuulFilter {
 				String route = String.format("%s%s", newEndPoint, strippedRoute);
 				System.out.println("New route to call----->" + route);
 				
+				System.out.println("Query Params: " + ctx.getRequestQueryParams());
+				// Discard the current route request
 				//disable SimpleHostRoutingFilter
 				ctx.setRouteHost(null);
 				
 				//disable RibbonRouting Filter
 				ctx.remove(serviceId);
+
 				try {
 					RequestContext.getCurrentContext().getResponse().sendRedirect(route);
 				} catch (IOException e) {

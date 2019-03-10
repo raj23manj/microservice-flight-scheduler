@@ -15,10 +15,10 @@ public class ZullFilters {
 	public ResponseAuditFilter getResponseAuditFilter() {
 		return new ResponseAuditFilter();
 	}
-//	
-//	@Bean
-//	public RouteFilter getRouteFilter() {
-//		return new RouteFilter();
-//	}
+	
+	@Bean
+	public RouteFilter getRouteFilter() {
+		return new RouteFilter();
+	}
 	
 }
