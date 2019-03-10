@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 import com.course.ms.flightSchedule.dao.FlightScheduleRepository;
 import com.course.ms.flightSchedule.models.Flight;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 
 @Service("flightScheduleService")
 public class FlightScheduleServiceImpl implements FlightScheduleService{
@@ -24,9 +25,13 @@ public class FlightScheduleServiceImpl implements FlightScheduleService{
 	@Autowired
 	private FlightScheduleRepository flightRepository;
     
-	@HystrixCommand(commandKey="getFlightsKey", fallbackMethod="buildFallbackFlights")
+	@HystrixCommand(commandKey="getFlightsKey", fallbackMethod="buildFallbackFlights", threadPoolKey="getFlightsThreadPool",
+			threadPoolProperties= {
+					@HystrixProperty(name="coreSize", value="1"), @HystrixProperty(name="maxQueueSize", value="2")
+			})
 	@Override
 	public List<Flight> getFLights(String from, String to) {
+		System.out.println(Thread.currentThread().getName());
 		Flight filterFlight = new Flight();
 		filterFlight.setFlightFrom(from);
 		filterFlight.setFlightTo(to);
