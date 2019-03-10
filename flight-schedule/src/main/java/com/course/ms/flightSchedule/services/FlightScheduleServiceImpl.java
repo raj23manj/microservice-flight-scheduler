@@ -1,5 +1,6 @@
 package com.course.ms.flightSchedule.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class FlightScheduleServiceImpl implements FlightScheduleService{
 	@Autowired
 	private FlightScheduleRepository flightRepository;
     
-	@HystrixCommand(commandKey="getFlightsKey")
+	@HystrixCommand(commandKey="getFlightsKey", fallbackMethod="buildFallbackFlights")
 	@Override
 	public List<Flight> getFLights(String from, String to) {
 		Flight filterFlight = new Flight();
@@ -39,6 +40,21 @@ public class FlightScheduleServiceImpl implements FlightScheduleService{
 							   .collect(Collectors.toList());
 		}
 		
+		return flightList;
+	}
+	
+	public List<Flight> buildFallbackFlights(String from, String to) {
+		Flight flight = new Flight();
+		flight.setId(0L);
+		flight.setFlightFrom(from);
+		flight.setFlightTo(to);
+		flight.setFlightCode("Sorry!!! No flight available this time");
+		flight.setAirline("N/A");
+		flight.setDepartureTime("N/A");
+		flight.setArrivalTime("N/A");
+		
+		List<Flight> flightList = new ArrayList<>();
+		flightList.add(flight);
 		return flightList;
 	}
 	
