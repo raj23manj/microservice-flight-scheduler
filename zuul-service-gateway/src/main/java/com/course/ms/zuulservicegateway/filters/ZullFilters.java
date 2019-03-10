@@ -11,10 +11,10 @@ public class ZullFilters {
 		return new AuthenticationFilter();
 	}
 
-//	@Bean
-//	public ResponseAuditFilter getResponseAuditFilter() {
-//		return new ResponseAuditFilter();
-//	}
+	@Bean
+	public ResponseAuditFilter getResponseAuditFilter() {
+		return new ResponseAuditFilter();
+	}
 //	
 //	@Bean
 //	public RouteFilter getRouteFilter() {
